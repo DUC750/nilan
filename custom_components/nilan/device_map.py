@@ -86,7 +86,9 @@ CTS602_ENTITY_MAP = {
         "entity_type": "sensor",
         "min_bus_version": 1,
         "min_hps_bus_version": 1,
-        "supported_devices": (None,),
+        "supported_devices": (
+            11,
+        ),
     },
     "get_t3_exhaust_temperature": {
         "entity_type": "sensor",
@@ -94,6 +96,7 @@ CTS602_ENTITY_MAP = {
         "min_hps_bus_version": 1,
         "supported_devices": (
             2,
+            11,
             13,
             31,
         ),
@@ -105,6 +108,7 @@ CTS602_ENTITY_MAP = {
         "supported_devices": (
             2,
             10,
+            11,
             12,
             13,
             31,
@@ -182,6 +186,7 @@ CTS602_ENTITY_MAP = {
         "min_hps_bus_version": 1,
         "supported_devices": (
             2,
+            11,
             13,
             31,
         ),
@@ -190,7 +195,9 @@ CTS602_ENTITY_MAP = {
         "entity_type": "sensor",
         "min_bus_version": 1,
         "min_hps_bus_version": 1,
-        "supported_devices": (None,),
+        "supported_devices": (
+            11,
+        ),
     },
     "get_t10_external_temperature": {
         "entity_type": "sensor",
@@ -246,13 +253,17 @@ CTS602_ENTITY_MAP = {
         "entity_type": "sensor",
         "min_bus_version": 1,
         "min_hps_bus_version": 1,
-        "supported_devices": (38,),
+        "supported_devices": (
+            11,
+            38,
+        ),
     },
     "get_t14_supply_temperature": {
         "entity_type": "sensor",
         "min_bus_version": 1,
         "min_hps_bus_version": 1,
         "supported_devices": (
+            11,
             20,
             21,
             38,
@@ -268,7 +279,9 @@ CTS602_ENTITY_MAP = {
         "entity_type": "sensor",
         "min_bus_version": 1,
         "min_hps_bus_version": 1,
-        "supported_devices": (None,),
+        "supported_devices": (
+            11,
+        ),
     },
     "get_humidity": {
         "entity_type": "sensor",
@@ -369,7 +382,9 @@ CTS602_ENTITY_MAP = {
         "entity_type": "sensor",
         "min_bus_version": 1,
         "min_hps_bus_version": 1,
-        "supported_devices": (None,),
+        "supported_devices": (
+            11,
+        ),
     },
     "get_exchanger_efficiency": {
         "entity_type": "sensor",
@@ -396,12 +411,18 @@ CTS602_ENTITY_MAP = {
     "get_hps_alarm_count": {
         "entity_type": "sensor",
         "min_hps_bus_version": 1,
-        "supported_devices": (44,),
+        "supported_devices": (
+            11,
+            44,
+        ),
     },
     "hps_alarm_reset": {
         "entity_type": "select",
         "min_hps_bus_version": 1,
-        "supported_devices": (44,),
+        "supported_devices": (
+            11,
+            44,
+        ),
     },
     "get_anode_state": {
         "entity_type": "sensor",
@@ -421,6 +442,7 @@ CTS602_ENTITY_MAP = {
         "min_bus_version": 1,
         "min_hps_bus_version": 1,
         "supported_devices": (
+            11,
             20,
             21,
             38,
@@ -430,32 +452,50 @@ CTS602_ENTITY_MAP = {
     "get_hps_t17_supply_temperature": {
         "entity_type": "sensor",
         "min_hps_bus_version": 1,
-        "supported_devices": (44,),
+        "supported_devices": (
+           11,
+           44,
+        ),
     },
     "get_hps_t16_return_temperature": {
         "entity_type": "sensor",
         "min_hps_bus_version": 1,
-        "supported_devices": (44,),
+        "supported_devices": (
+           11,
+           44,
+        ),
     },
     "get_hps_t22_shw_bottom_temperature": {
         "entity_type": "sensor",
         "min_hps_bus_version": 1,
-        "supported_devices": (44,),
+        "supported_devices": (
+           11,
+           44,
+        ),
     },
     "get_hps_t20_ambient_temperature": {
         "entity_type": "sensor",
         "min_hps_bus_version": 1,
-        "supported_devices": (44,),
+        "supported_devices": (
+           11,
+           44,
+        ),
     },
     "get_hps_output_compvolt1": {
         "entity_type": "sensor",
         "min_hps_bus_version": 1,
-        "supported_devices": (44,),
+        "supported_devices": (
+           11,
+           44,
+        ),
     },
     "get_hps_heat_pump_state": {
         "entity_type": "sensor",
         "min_hps_bus_version": 1,
-        "supported_devices": (44,),
+        "supported_devices": (
+           11,
+           44,
+        ),
     },
     "get_display_led_1_state": {
         "entity_type": "binary_sensor",
@@ -488,6 +528,7 @@ CTS602_ENTITY_MAP = {
         "supported_devices": (
             2,
             10,
+            11,
             13,
             31,
             33,
@@ -500,7 +541,9 @@ CTS602_ENTITY_MAP = {
         "entity_type": "sensor",
         "min_bus_version": 11,
         "min_hps_bus_version": 1,
-        "supported_devices": (None,),
+        "supported_devices": (
+            11,
+        ),
     },
     "get_co2_present": {
         "entity_type": "config",
@@ -523,22 +566,34 @@ CTS602_ENTITY_MAP = {
     "get_hps_t21_shw_top_temperature": {
         "entity_type": "sensor",
         "min_hps_bus_version": 2,
-        "supported_devices": (44,),
+        "supported_devices": (
+           11,
+           44,
+        ),
     },
     "get_hps_t18_tank_temperature": {
         "entity_type": "sensor",
         "min_hps_bus_version": 2,
-        "supported_devices": (44,),
+        "supported_devices": (
+           11,
+           44,
+        ),
     },
     "get_hps_t35_pressure_pipe_temperature": {
         "entity_type": "sensor",
         "min_hps_bus_version": 2,
-        "supported_devices": (44,),
+        "supported_devices": (
+           11,
+           44,
+        ),
     },
     "get_hps_compressor_capacity": {
         "entity_type": "sensor",
         "min_hps_bus_version": 2,
-        "supported_devices": (44,),
+        "supported_devices": (
+           11,
+           44,
+        ),
     },
     "get_compressor_state": {
         "entity_type": "binary_sensor",
@@ -580,6 +635,7 @@ CTS602_ENTITY_MAP = {
         "min_bus_version": 1,
         "min_hps_bus_version": 1,
         "supported_devices": (
+            11,
             20,
             21,
             38,
@@ -591,6 +647,7 @@ CTS602_ENTITY_MAP = {
         "min_bus_version": 1,
         "min_hps_bus_version": 1,
         "supported_devices": (
+            11,
             20,
             21,
             44,
@@ -601,6 +658,7 @@ CTS602_ENTITY_MAP = {
         "min_bus_version": 1,
         "min_hps_bus_version": 1,
         "supported_devices": (
+            11,
             20,
             21,
             44,
@@ -611,6 +669,7 @@ CTS602_ENTITY_MAP = {
         "min_bus_version": 1,
         "min_hps_bus_version": 1,
         "supported_devices": (
+            11,
             20,
             21,
             44,
@@ -815,6 +874,7 @@ CTS602_ENTITY_MAP = {
             2,
             4,
             10,
+            11,
             13,
             20,
             21,
@@ -831,6 +891,7 @@ CTS602_ENTITY_MAP = {
             2,
             4,
             10,
+            11,
             13,
             20,
             21,
@@ -967,6 +1028,7 @@ CTS602_ENTITY_MAP = {
         "min_hps_bus_version": 1,
         "supported_devices": (
             10,
+            11,
             12,
             19,
             20,
@@ -1045,6 +1107,7 @@ CTS602_ENTITY_MAP = {
             21,
         ),
         "supported_devices": (
+            11,
             12,
             20,
             21,
@@ -1060,6 +1123,7 @@ CTS602_ENTITY_MAP = {
         "min_bus_version": 19,
         "min_hps_bus_version": 1,
         "supported_devices": (
+            11,
             12,
             20,
             21,
@@ -1072,6 +1136,7 @@ CTS602_ENTITY_MAP = {
         "min_bus_version": 19,
         "min_hps_bus_version": 1,
         "supported_devices": (
+            11,
             12,
             20,
             21,
@@ -1084,6 +1149,7 @@ CTS602_ENTITY_MAP = {
         "min_bus_version": 19,
         "min_hps_bus_version": 1,
         "supported_devices": (
+            11,
             12,
             20,
             21,
@@ -1096,6 +1162,7 @@ CTS602_ENTITY_MAP = {
         "min_bus_version": 19,
         "min_hps_bus_version": 1,
         "supported_devices": (
+            11,
             12,
             20,
             21,
@@ -1108,6 +1175,7 @@ CTS602_ENTITY_MAP = {
         "min_bus_version": 19,
         "min_hps_bus_version": 1,
         "supported_devices": (
+            11,
             20,
             21,
             38,
@@ -1123,6 +1191,7 @@ CTS602_ENTITY_MAP = {
             21,
         ),
         "supported_devices": (
+            11,
             20,
             21,
             33,
@@ -1141,6 +1210,7 @@ CTS602_ENTITY_MAP = {
             21,
         ),
         "supported_devices": (
+            11,
             20,
             21,
             33,
@@ -1153,7 +1223,9 @@ CTS602_ENTITY_MAP = {
     "get_hps_water_heater_setpoint": {
         "entity_type": "number",
         "min_hps_bus_version": 1,
-        "supported_devices": (None,),
+        "supported_devices": (
+            11,
+        ),
     },
     "get_low_humidity_step": {
         "entity_type": "select",
@@ -1204,7 +1276,9 @@ CTS602_ENTITY_MAP = {
         "entity_type": "button",
         "min_bus_version": 1,
         "max_bus_version": 19,
-        "supported_devices": (None,),
+        "supported_devices": (
+            11,
+        ),
     },
     "get_user_menu_state": {
         "entity_type": "select",
@@ -1295,6 +1369,7 @@ CTS602_ENTITY_MAP = {
         "supported_devices": (
             2,
             4,
+            11,
             12,
             13,
             25,
@@ -1331,7 +1406,9 @@ CTS602_ENTITY_MAP = {
         "entity_type": "switch",
         "min_bus_version": 19,
         "min_hps_bus_version": 1,
-        "supported_devices": (None,),
+        "supported_devices": (
+            11,
+        ),
     },
     "get_min_supply_step": {
         "entity_type": "select",
@@ -1415,6 +1492,7 @@ CTS602_ENTITY_MAP = {
         "min_bus_version": 11,
         "min_hps_bus_version": 1,
         "supported_devices": (
+            11,
             33,
             35,
             38,
@@ -1464,6 +1542,7 @@ CTS602_ENTITY_MAP = {
         "min_bus_version": 11,
         "min_hps_bus_version": 1,
         "supported_devices": (
+            11,
             33,
             35,
             44,
@@ -1474,6 +1553,7 @@ CTS602_ENTITY_MAP = {
         "min_bus_version": 11,
         "min_hps_bus_version": 1,
         "supported_devices": (
+            11,
             33,
             35,
             44,
@@ -1618,6 +1698,7 @@ CTS602_ENTITY_MAP = {
         "min_bus_version": 19,
         "min_hps_bus_version": 1,
         "supported_devices": (
+            11,
             33,
             35,
             36,
@@ -1628,6 +1709,7 @@ CTS602_ENTITY_MAP = {
         "min_bus_version": 19,
         "min_hps_bus_version": 1,
         "supported_devices": (
+            11,
             33,
             35,
             36,
@@ -1636,16 +1718,25 @@ CTS602_ENTITY_MAP = {
     "get_hps_main_switch": {
         "entity_type": "switch",
         "min_hps_bus_version": 2,
-        "supported_devices": (44,),
+        "supported_devices": (
+            11,
+            44, 
+        ),
     },
     "get_hps_season_mode": {
         "entity_type": "select",
         "min_hps_bus_version": 2,
-        "supported_devices": (44,),
+        "supported_devices": (
+            11,
+            44, 
+        ),
     },
     "get_hps_heating_setpoint_min": {
         "entity_type": "number",
         "min_hps_bus_version": 2,
-        "supported_devices": (44,),
+        "supported_devices": (
+            11,
+            44, 
+        ),
     },
 }
