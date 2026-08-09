@@ -95,7 +95,7 @@ CTS602_ENTITY_MAP = {
         "entity_type": "sensor",
         "min_bus_version": 1,
         "min_hps_bus_version": 1,
-        "supported_devices": (None,),
+        "supported_devices": (11,),
     },
     "get_t3_exhaust_temperature": {
         "entity_type": "sensor",
@@ -106,6 +106,7 @@ CTS602_ENTITY_MAP = {
             3,
             13,
             31,
+            11,
         ),
     },
     "get_t4_outlet": {
@@ -124,6 +125,7 @@ CTS602_ENTITY_MAP = {
             35,
             36,
             44,
+            11,
         ),
     },
     "get_t5_condenser_temperature": {
@@ -216,7 +218,7 @@ CTS602_ENTITY_MAP = {
         "entity_type": "sensor",
         "min_bus_version": 1,
         "min_hps_bus_version": 1,
-        "supported_devices": (None,),
+        "supported_devices": (11,),
     },
     "get_t10_external_temperature": {
         "entity_type": "sensor",
@@ -309,7 +311,7 @@ CTS602_ENTITY_MAP = {
         "entity_type": "sensor",
         "min_bus_version": 1,
         "min_hps_bus_version": 1,
-        "supported_devices": (None,),
+        "supported_devices": (11,),
     },
     "get_humidity": {
         "entity_type": "sensor",
@@ -414,7 +416,7 @@ CTS602_ENTITY_MAP = {
         "entity_type": "sensor",
         "min_bus_version": 1,
         "min_hps_bus_version": 1,
-        "supported_devices": (None,),
+        "supported_devices": (11,),
     },
     "get_exchanger_efficiency": {
         "entity_type": "sensor",
@@ -549,13 +551,14 @@ CTS602_ENTITY_MAP = {
             35,
             36,
             44,
+            11,
         ),
     },
     "get_after_heating_element_capacity": {
         "entity_type": "sensor",
         "min_bus_version": 11,
         "min_hps_bus_version": 1,
-        "supported_devices": (None,),
+        "supported_devices": (11,),
     },
     "get_co2_present": {
         "entity_type": "config",
@@ -917,6 +920,7 @@ CTS602_ENTITY_MAP = {
             30,
             31,
             44,
+            11,
         ),
     },
     "get_max_supply_air_winter_setpoint": {
@@ -937,6 +941,7 @@ CTS602_ENTITY_MAP = {
             30,
             31,
             44,
+            11,
         ),
     },
     "get_summer_state_change_setpoint": {
@@ -1096,6 +1101,7 @@ CTS602_ENTITY_MAP = {
             38,
             42,
             44,
+            11,
         ),
     },
     "get_compressor_priority": {
@@ -1463,6 +1469,7 @@ CTS602_ENTITY_MAP = {
             35,
             36,
             44,
+            11,
         ),
     },
     "get_low_room_temperature_setpoint": {
@@ -1495,7 +1502,7 @@ CTS602_ENTITY_MAP = {
         "entity_type": "switch",
         "min_bus_version": 19,
         "min_hps_bus_version": 1,
-        "supported_devices": (None,),
+        "supported_devices": (11,),
     },
     "get_min_supply_step": {
         "entity_type": "select",
@@ -1594,6 +1601,7 @@ CTS602_ENTITY_MAP = {
             38,
             42,
             44,
+            11,
         ),
     },
     "get_defrost_start_setpoint": {
@@ -1649,6 +1657,7 @@ CTS602_ENTITY_MAP = {
             33,
             35,
             44,
+            11,
         ),
     },
     "get_maximum_outlet_defrost_time": {
@@ -1660,6 +1669,7 @@ CTS602_ENTITY_MAP = {
             33,
             35,
             44,
+            11,
         ),
     },
     "get_minimum_defrost_time": {
