@@ -161,7 +161,7 @@ class Device:
     @property
     def get_device_hw_version(self):
         """Device hardware version."""
-        return self._device_hw_ver
+        return str(self._device_hw_ver)
 
     @property
     def get_device_sw_version(self):
@@ -2565,6 +2565,40 @@ class Device:
                 signed=False,
             )
         _LOGGER.error("Could not read get_hps_alarm_3_code")
+        return None
+
+    async def get_high_pressure_switch_state(self) -> bool:
+        """Get high pressure switch state (P_HI, input register 107)."""
+        result = await self._modbus.async_pb_call(
+            self._unit_id, CTS602InputRegisters.input_p_hi, 1, "input"
+        )
+        if result is not None:
+            value = int.from_bytes(
+                result.registers[0].to_bytes(2, "little", signed=False),
+                "little",
+                signed=True,
+            )
+            if value == 0:
+                return False
+            return True
+        _LOGGER.error("Could not read get_high_pressure_switch_state")
+        return None
+
+    async def get_low_pressure_switch_state(self) -> bool:
+        """Get low pressure switch state (P_LO, input register 108)."""
+        result = await self._modbus.async_pb_call(
+            self._unit_id, CTS602InputRegisters.input_p_lo, 1, "input"
+        )
+        if result is not None:
+            value = int.from_bytes(
+                result.registers[0].to_bytes(2, "little", signed=False),
+                "little",
+                signed=True,
+            )
+            if value == 0:
+                return False
+            return True
+        _LOGGER.error("Could not read get_low_pressure_switch_state")
         return None
 
     async def get_smoke_alarm_state(self) -> bool:
