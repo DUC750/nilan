@@ -25,6 +25,26 @@ ATTRIBUTE_TO_BINARY_SENSORS = {
             True,
         )
     ],
+    "get_high_pressure_switch_state": [
+        Map(
+            "high_pressure_switch",
+            BinarySensorDeviceClass.PROBLEM,
+            None,
+            "mdi:gauge-full",
+            None,
+            True,
+        )
+    ],
+    "get_low_pressure_switch_state": [
+        Map(
+            "low_pressure_switch",
+            BinarySensorDeviceClass.PROBLEM,
+            None,
+            "mdi:gauge-empty",
+            None,
+            True,
+        )
+    ],
     "get_smoke_alarm_state": [
         Map(
             "smoke_alarm",
