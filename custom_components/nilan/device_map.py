@@ -49,6 +49,18 @@ CTS602_ENTITY_MAP = {
         "min_hps_bus_version": 1,
         "supported_devices": ("all",),
     },
+    "get_high_pressure_switch_state": {
+        "entity_type": "binary_sensor",
+        "min_bus_version": 1,
+        "min_hps_bus_version": 1,
+        "supported_devices": (11,),
+    },
+    "get_low_pressure_switch_state": {
+        "entity_type": "binary_sensor",
+        "min_bus_version": 1,
+        "min_hps_bus_version": 1,
+        "supported_devices": (11,),
+    },
     "get_smoke_alarm_state": {
         "entity_type": "binary_sensor",
         "min_bus_version": 0,
