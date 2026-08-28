@@ -1,3 +1,6 @@
+# This file has been modified from the original veista/nilan integration.
+# Original work Copyright veista (Taneli Veistinen), Apache License 2.0.
+# See README.md for the list of changes.
 """The Nilan integration."""
 
 from __future__ import annotations

@@ -1,4 +1,26 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
+> ## ⚠️ This is a modified fork
+>
+> This repository is a fork of **[veista/nilan](https://github.com/veista/nilan)** by
+> **Taneli Veistinen**, licensed under the Apache License 2.0. The integration is his work —
+> the changes below are additions on top of it.
+>
+> **Changes compared to upstream:**
+>
+> | Area | Change |
+> | --- | --- |
+> | `device_map.py` | Entity mapping for device type **11** (VP 18comp) — submitted upstream as [PR #234](https://github.com/veista/nilan/pull/234) |
+> | `device.py`, `binary_sensor.py`, `device_map.py` | Pressure switch inputs **P_HI / P_LO** exposed as `binary_sensor` |
+> | `device.py` | `hw_version` returned as `str` (same fix as upstream [#225](https://github.com/veista/nilan/pull/225)) |
+> | `translations/de.json`, `en.json` | Names for the pressure switches; German name for **T5 corrected to condenser** (it is the component, not condensate) |
+>
+> **Please report problems with this fork here, not in `veista/nilan`.** If you can reproduce the
+> problem with the upstream integration, report it there instead — that keeps unrelated reports
+> off his tracker.
+>
+> If you find this integration useful, support goes to the original author:
+> [github.com/sponsors/veista](https://github.com/sponsors/veista)
+
 # Nilan
 Nilan integration for Home Assistant
 
