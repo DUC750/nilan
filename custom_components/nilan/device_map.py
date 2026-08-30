@@ -140,7 +140,6 @@ CTS602_ENTITY_MAP = {
             35,
             36,
             44,
-            11,
         ),
     },
     "get_t5_condenser_temperature": {
