@@ -1,10 +1,10 @@
 {
   "domain": "nilan",
   "name": "Nilan",
+  "after_dependencies": ["esphome", "usb"],
   "codeowners": ["@veista"],
   "config_flow": true,
   "dependencies": ["modbus"],
-  "after_dependencies": ["esphome", "usb"],
   "documentation": "https://github.com/veista/nilan",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/veista/nilan/issues",
