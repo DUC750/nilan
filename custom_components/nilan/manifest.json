@@ -1,6 +1,7 @@
 {
   "domain": "nilan",
   "name": "Nilan",
+  "after_dependencies": ["esphome", "usb"],
   "codeowners": ["@veista"],
   "config_flow": true,
   "dependencies": ["modbus"],

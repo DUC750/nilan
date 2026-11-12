@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Device is Already Configured"
+      "already_configured": "Device is Already Configured",
+      "reconfigure_successful": "Re-configuration was successful"
     },
     "error": {
       "cannot_connect": "Failed to Connect",
@@ -14,7 +15,8 @@
         "title": "Select Interface Type",
         "menu_options": {
           "tcp": "TCP",
-          "serial": "Serial"
+          "serial": "Serial",
+          "serial_proxy": "Serial port (Home Assistant selector)"
         }
       },
       "tcp": {
@@ -30,6 +32,36 @@
         "title": "Serial Configuration",
         "data": {
           "name": "Device Name",
+          "host_port": "Path",
+          "unit_id": "Unit ID"
+        }
+      },
+      "serial_proxy": {
+        "title": "Serial port (Home Assistant selector)",
+        "data": {
+          "name": "Device Name",
+          "host_port": "Path",
+          "unit_id": "Unit ID"
+        }
+      },
+      "reconfigure": {
+        "title": "Change connection",
+        "menu_options": {
+          "reconfigure_tcp": "Modbus TCP (gateway)",
+          "reconfigure_serial_proxy": "Serial port (Home Assistant selector)"
+        }
+      },
+      "reconfigure_tcp": {
+        "title": "Modbus TCP (gateway)",
+        "data": {
+          "host_ip": "IP Address",
+          "host_port": "Port",
+          "unit_id": "Unit ID"
+        }
+      },
+      "reconfigure_serial_proxy": {
+        "title": "Serial port (Home Assistant selector)",
+        "data": {
           "host_port": "Path",
           "unit_id": "Unit ID"
         }

@@ -14,6 +14,8 @@
 > | `device.py`, `binary_sensor.py`, `device_map.py` | Pressure switch inputs **P_HI / P_LO** exposed as `binary_sensor` |
 > | `device.py` | `hw_version` returned as `str` (same fix as upstream [#225](https://github.com/veista/nilan/pull/225)) |
 > | `translations/de.json`, `en.json` | Names for the pressure switches; German name for **T5 corrected to condenser** (it is the component, not condensate) |
+> | `rtu_hub.py`, `device.py`, `config_flow.py` | Third connection type **serial port selected in Home Assistant** (Modbus RTU over serialx), e.g. an ESPHome serial proxy such as the Home Assistant Connect AUX-2 — see [below](#serial-port-selected-in-home-assistant) |
+> | `config_flow.py` | **Reconfigure** an existing entry between TCP and serial port without losing entities |
 >
 > **Please report problems with this fork here, not in `veista/nilan`.** If you can reproduce the
 > problem with the upstream integration, report it there instead — that keeps unrelated reports
@@ -59,11 +61,29 @@ You must have one interface type installed on your Nilan device for this Integra
 #### Supported Interface Types
 - ModBus RTU to Modbus TCP Bridge 
 - USB to RS485 adaptor
+- Serial port selected in Home Assistant (this fork), e.g. an ESPHome serial proxy
 
 #### Tested Known-to-work Bridge Devices
 * USR-TCP232-410S
 * Waveshare RS485 TO ETH (B)
 * https://github.com/veista/modbus_bridge
+
+#### Serial port selected in Home Assistant
+
+Home Assistant 2026.10+ can hand out serial ports of network devices (for example the USB port of
+an ESPHome serial proxy such as the Home Assistant Connect AUX-2). Such a port is not a device path
+but a URL like `esphome-hass://esphome/<entry_id>?port_udev_id=...`, which only `serialx` can open.
+This fork talks Modbus RTU over it directly (`rtu_hub.py`, function codes 03/04/16, 19200 8E1).
+
+- **New entry:** Add Nilan → *Serial port (Home Assistant selector)* → pick the port, unit ID 30.
+- **Existing entry:** Nilan → ⋮ → *Reconfigure* → choose TCP or serial port. The entry, its
+  entities, history and automations stay as they are. Switching back works the same way.
+- Only one client may use the bus at a time: disconnect the old gateway before switching.
+
+Tested on a VP 18comp (CTS602) with Home Assistant Connect AUX-2 (custom ESPHome firmware) and a
+Waveshare USB TO RS485 adapter (FT232RL), about 30 cm of cable, first try without swapping A/B.
+The AUX-2 factory firmware only binds CH343-based USB adapters; an FT232 adapter needs an ESPHome
+configuration that extends the `usb_uart` entry with `type: FT232`, `vid: 0x0403`, `pid: 0x6001`.
 
 ### Software
 #### Manually
