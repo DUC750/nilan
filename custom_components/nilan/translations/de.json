@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Gerät ist bereits konfiguriert"
+      "already_configured": "Gerät ist bereits konfiguriert",
+      "reconfigure_successful": "Die Neukonfiguration war erfolgreich"
     },
     "error": {
       "cannot_connect": "Fehler bei der Verbindung",
@@ -14,7 +15,8 @@
         "title": "Wähle Schnittstellen Typ",
         "menu_options": {
           "tcp": "TCP",
-          "serial": "Serial"
+          "serial": "Serial",
+          "serial_proxy": "Serieller Port (Auswahl in Home Assistant)"
         }
       },
       "tcp": {
@@ -30,6 +32,36 @@
         "title": "Serial Konfiguration",
         "data": {
           "name": "Geräte Name",
+          "host_port": "Pfad",
+          "unit_id": "Unit ID"
+        }
+      },
+      "serial_proxy": {
+        "title": "Serieller Port (Auswahl in Home Assistant)",
+        "data": {
+          "name": "Geräte Name",
+          "host_port": "Pfad",
+          "unit_id": "Unit ID"
+        }
+      },
+      "reconfigure": {
+        "title": "Verbindung ändern",
+        "menu_options": {
+          "reconfigure_tcp": "Modbus TCP (Gateway)",
+          "reconfigure_serial_proxy": "Serieller Port (Auswahl in Home Assistant)"
+        }
+      },
+      "reconfigure_tcp": {
+        "title": "Modbus TCP (Gateway)",
+        "data": {
+          "host_ip": "IP Addresse",
+          "host_port": "Port",
+          "unit_id": "Unit ID"
+        }
+      },
+      "reconfigure_serial_proxy": {
+        "title": "Serieller Port (Auswahl in Home Assistant)",
+        "data": {
           "host_port": "Pfad",
           "unit_id": "Unit ID"
         }

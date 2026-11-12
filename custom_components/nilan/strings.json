@@ -5,7 +5,8 @@
         "title": "[%key:common::config_flow::menu::title%]",
         "menu_options":{
           "tcp": "[%key:common::config_flow::menu_options::tcp%]",
-          "serial": "[%key:common::config_flow::menu_options::serial%]"
+          "serial": "[%key:common::config_flow::menu_options::serial%]",
+          "serial_proxy": "Serial port (Home Assistant selector)"
         }
       },
       "tcp": {
@@ -24,6 +25,36 @@
           "host_port": "[%key:common::config_flow::data::host_port%]",
           "unit_id": "[%key:common::config_flow::data::unit_id%]"
         }
+      },
+      "serial_proxy": {
+        "title": "Serial port (Home Assistant selector)",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host_port": "[%key:common::config_flow::data::host_port%]",
+          "unit_id": "[%key:common::config_flow::data::unit_id%]"
+        }
+      },
+      "reconfigure": {
+        "title": "Change connection",
+        "menu_options": {
+          "reconfigure_tcp": "Modbus TCP (gateway)",
+          "reconfigure_serial_proxy": "Serial port (Home Assistant selector)"
+        }
+      },
+      "reconfigure_tcp": {
+        "title": "Modbus TCP (gateway)",
+        "data": {
+          "host_ip": "[%key:common::config_flow::data::host_ip%]",
+          "host_port": "[%key:common::config_flow::data::host_port%]",
+          "unit_id": "[%key:common::config_flow::data::unit_id%]"
+        }
+      },
+      "reconfigure_serial_proxy": {
+        "title": "Serial port (Home Assistant selector)",
+        "data": {
+          "host_port": "[%key:common::config_flow::data::host_port%]",
+          "unit_id": "[%key:common::config_flow::data::unit_id%]"
+        }
       }
     },
     "error": {
@@ -33,7 +64,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {
