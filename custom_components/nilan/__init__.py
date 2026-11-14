@@ -5,12 +5,14 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN
 from .device import Device
@@ -27,6 +29,10 @@ PLATFORMS = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
+
+# Reload the entry when the device has not answered for this long (#2370).
+RELOAD_AFTER = 300.0
+LINK_CHECK_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -50,6 +56,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # entry.async_on_unload(entry.async_on_state_change())
+
+    @callback
+    def _reload_if_link_dead(_now) -> None:
+        """Reload once when the device stays silent; HA's setup retry takes it from there.
+
+        RtuHub reopens its own stream, HA's ModbusHub does not reliably reconnect after
+        the gateway was away (#2370). A reload rebuilds the hub for both transports; if
+        the device is still silent, setup raises ConfigEntryNotReady and HA retries.
+        """
+        if device.seconds_since_success < RELOAD_AFTER:
+            return
+        _LOGGER.warning(
+            "%s has not answered for %.0f s, reloading the integration",
+            name,
+            device.seconds_since_success,
+        )
+        cancel()
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    cancel = async_track_time_interval(hass, _reload_if_link_dead, LINK_CHECK_INTERVAL)
+    entry.async_on_unload(cancel)
     return True
 
 
@@ -91,6 +118,11 @@ class NilanEntity(Entity):
     def __init__(self, device: Device) -> None:
         """Initialize the instance."""
         self._device = device
+
+    @property
+    def available(self) -> bool:
+        """Unavailable while the device does not answer, instead of stale values."""
+        return self._device.available
 
     @property
     def device_info(self):

@@ -144,6 +144,140 @@ def test_open_failure_returns_false():
     assert asyncio.run(run()) == (False, None)
 
 
+class FakeClock:
+    """Monotonic clock the test moves by hand."""
+
+    def __init__(self):
+        self.now = 1000.0
+
+    def __call__(self):
+        return self.now
+
+
+def answer_ok(req):
+    return rtu.with_crc(bytes([30, 4, 2, 0x08, 0x02]))
+
+
+def test_stored_reader_exception_never_escapes():
+    # #2370: the ESPHome proxy goes away, serialx stores OSError on the reader, and every
+    # read raises that same object. 500 calls must neither raise nor grow its traceback.
+    lost = OSError(5, "ESPHome API connection closed")
+    clock = FakeClock()
+    opened = {"n": 0}
+
+    async def opener():
+        opened["n"] += 1
+        reader = asyncio.StreamReader()
+        if opened["n"] == 1:
+            reader.set_exception(lost)
+        return reader, FakeWriter(reader, answer_ok)
+
+    async def run():
+        hub = rtu.RtuHub("esphome-hass://x", opener=opener, clock=clock)
+        assert await hub.async_setup()
+        results = [await hub.async_pb_call(30, 202, 1, "input") for _ in range(500)]
+        return hub, results
+
+    hub, results = asyncio.run(run())
+    assert results == [None] * 500
+    assert not hub.connected
+    assert opened["n"] == 1, "no reopen before the delay has passed"
+    frames, tb = 0, lost.__traceback__
+    while tb:
+        frames, tb = frames + 1, tb.tb_next
+    assert frames < 20, f"traceback grew to {frames} frames"
+
+
+def test_reopen_after_delay_restores_values():
+    clock = FakeClock()
+    opened = {"n": 0}
+
+    async def opener():
+        opened["n"] += 1
+        reader = asyncio.StreamReader()
+        if opened["n"] == 1:
+            reader.set_exception(ConnectionResetError("proxy lost"))
+        return reader, FakeWriter(reader, answer_ok)
+
+    async def run():
+        hub = rtu.RtuHub("esphome-hass://x", opener=opener, clock=clock)
+        await hub.async_setup()
+        first = await hub.async_pb_call(30, 202, 1, "input")
+        clock.now += rtu.REOPEN_DELAY_MIN - 0.1
+        early = await hub.async_pb_call(30, 202, 1, "input")
+        clock.now += 0.2
+        late = await hub.async_pb_call(30, 202, 1, "input")
+        return hub, first, early, late
+
+    hub, first, early, late = asyncio.run(run())
+    assert first is None and early is None
+    assert late.registers == [0x0802]
+    assert hub.connected and hub.event_connected.is_set()
+    assert opened["n"] == 2
+
+
+def test_eof_counts_as_lost():
+    async def opener():
+        reader = asyncio.StreamReader()
+        reader.feed_eof()
+        return reader, FakeWriter(reader, lambda req: b"")
+
+    async def run():
+        hub = rtu.RtuHub("esphome-hass://x", opener=opener, clock=FakeClock())
+        await hub.async_setup()
+        return hub, await hub.async_pb_call(30, 202, 1, "input")
+
+    hub, result = asyncio.run(run())
+    assert result is None
+    assert not hub.connected
+
+
+def test_failed_reopens_back_off_up_to_maximum():
+    clock = FakeClock()
+    attempts = []
+
+    async def opener():
+        attempts.append(clock.now)
+        if len(attempts) == 1:
+            reader = asyncio.StreamReader()
+            reader.set_exception(OSError("gone"))
+            return reader, FakeWriter(reader, answer_ok)
+        raise OSError("still gone")
+
+    async def run():
+        hub = rtu.RtuHub("esphome-hass://x", opener=opener, clock=clock)
+        await hub.async_setup()
+        await hub.async_pb_call(30, 202, 1, "input")  # loses the stream
+        for _ in range(200):  # 200 polls, one second apart
+            clock.now += 1.0
+            await hub.async_pb_call(30, 202, 1, "input")
+
+    asyncio.run(run())
+    gaps = [b - a for a, b in zip(attempts[1:], attempts[2:])]
+    assert gaps[:4] == [10.0, 20.0, 40.0, 60.0]
+    assert max(gaps) == rtu.REOPEN_DELAY_MAX
+
+
+def test_closed_hub_does_not_reopen():
+    opened = {"n": 0}
+
+    async def opener():
+        opened["n"] += 1
+        reader = asyncio.StreamReader()
+        return reader, FakeWriter(reader, answer_ok)
+
+    async def run():
+        clock = FakeClock()
+        hub = rtu.RtuHub("esphome-hass://x", opener=opener, clock=clock)
+        await hub.async_setup()
+        await hub.async_close()
+        clock.now += 1000
+        return await hub.async_pb_call(30, 202, 1, "input")
+
+    assert asyncio.run(run()) is None
+    assert opened["n"] == 1
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_"):

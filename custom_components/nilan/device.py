@@ -12,6 +12,7 @@ from homeassistant.components.modbus import modbus
 from homeassistant.core import HomeAssistant
 
 from .device_map import CTS602_DEVICE_TYPES, CTS602_ENTITY_MAP
+from .link_health import LinkHealth
 from .registers import CTS602HoldingRegisters, CTS602InputRegisters
 from .rtu_hub import RtuHub
 
@@ -55,11 +56,30 @@ class Device:
         }
         if self._com_type == "serial_proxy":
             # serialx-only ports (e.g. esphome-hass:// URLs); same call surface as ModbusHub
-            self._modbus = RtuHub(self._host_port)
+            hub = RtuHub(self._host_port)
         else:
-            self._modbus = modbus.ModbusHub(self.hass, self._client_config)
+            hub = modbus.ModbusHub(self.hass, self._client_config)
+        # same call surface again, plus link health for both transports (#2370)
+        self._modbus = LinkHealth(hub, self._device_name)
         self._attributes = {}
         self._air_geo_type = 0
+
+    @property
+    def available(self) -> bool:
+        """True while the device answered recently."""
+        return self._modbus.available
+
+    @property
+    def seconds_since_success(self) -> float:
+        """Seconds since the device last answered."""
+        return self._modbus.seconds_since_success
+
+    def _read_failed(self, getter: str) -> None:
+        """Log a failed read; during an outage only at debug level."""
+        if self._modbus.quiet:
+            _LOGGER.debug("Could not read %s", getter)
+        else:
+            _LOGGER.error("Could not read %s", getter)
 
     async def async_close(self):
         """Close modbus connection."""
@@ -214,7 +234,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_machine_type")
+        self._read_failed("get_machine_type")
         return None
 
     async def get_bus_version(self) -> int:
@@ -228,7 +248,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_bus_version")
+        self._read_failed("get_bus_version")
         return None
 
     async def get_after_heating_type(self) -> int:
@@ -242,7 +262,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_after_heating_type")
+        self._read_failed("get_after_heating_type")
         return None
 
     async def get_air_heat_select(self) -> int:
@@ -256,7 +276,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_air_heat_select")
+        self._read_failed("get_air_heat_select")
         return None
 
     async def get_controller_software_version(self) -> str:
@@ -282,7 +302,7 @@ class Device:
                     char2 = chr(value >> 8)
                     version += char1 + char2
                 return version.replace(" ", "")
-        _LOGGER.error("Could not read get_controller_software_version")
+        self._read_failed("get_controller_software_version")
         return None
 
     async def get_controller_hardware_version(self) -> int:
@@ -296,7 +316,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_controller_hardware_version")
+        self._read_failed("get_controller_hardware_version")
         return None
 
     async def get_display_text_1(self) -> str:
@@ -319,7 +339,7 @@ class Device:
                     char2 = chr(char2)
                 text_string += char1 + char2
             return text_string
-        _LOGGER.error("Could not read get_display_text_1")
+        self._read_failed("get_display_text_1")
         return None
 
     async def get_display_text_2(self) -> str:
@@ -342,7 +362,7 @@ class Device:
                     char2 = chr(char2)
                 text_string += char1 + char2
             return text_string
-        _LOGGER.error("Could not read get_display_text_2")
+        self._read_failed("get_display_text_2")
         return None
 
     async def get_user_menu_state(self) -> int:
@@ -356,7 +376,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_user_menu_state")
+        self._read_failed("get_user_menu_state")
         return None
 
     async def get_anode_state(self) -> int:
@@ -370,7 +390,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_anode_state")
+        self._read_failed("get_anode_state")
         return None
 
     async def get_supply_air_after_heating(self) -> int:
@@ -384,7 +404,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_supply_air_after_heating")
+        self._read_failed("get_supply_air_after_heating")
         return None
 
     async def get_supply_power_at_level_1(self) -> int:
@@ -398,7 +418,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_supply_power_at_level_1")
+        self._read_failed("get_supply_power_at_level_1")
         return None
 
     async def get_supply_power_at_level_2(self) -> int:
@@ -412,7 +432,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_supply_power_at_level_2")
+        self._read_failed("get_supply_power_at_level_2")
         return None
 
     async def get_supply_power_at_level_3(self) -> int:
@@ -426,7 +446,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_supply_power_at_level_3")
+        self._read_failed("get_supply_power_at_level_3")
         return None
 
     async def get_supply_power_at_level_4(self) -> int:
@@ -440,7 +460,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_supply_power_at_level_4")
+        self._read_failed("get_supply_power_at_level_4")
         return None
 
     async def get_return_power_at_level_1(self) -> int:
@@ -454,7 +474,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_return_power_at_level_1")
+        self._read_failed("get_return_power_at_level_1")
         return None
 
     async def get_return_power_at_level_2(self) -> int:
@@ -468,7 +488,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_return_power_at_level_2")
+        self._read_failed("get_return_power_at_level_2")
         return None
 
     async def get_return_power_at_level_3(self) -> int:
@@ -482,7 +502,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_return_power_at_level_3")
+        self._read_failed("get_return_power_at_level_3")
         return None
 
     async def get_return_power_at_level_4(self) -> int:
@@ -496,7 +516,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_return_power_at_level_4")
+        self._read_failed("get_return_power_at_level_4")
         return None
 
     async def get_defrost_ventilation_level(self) -> int:
@@ -510,7 +530,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_defrost_ventilation_level")
+        self._read_failed("get_defrost_ventilation_level")
         return None
 
     async def get_central_heat_type(self) -> int:
@@ -524,7 +544,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_central_heat_type")
+        self._read_failed("get_central_heat_type")
         return None
 
     async def get_central_heat_select(self) -> int:
@@ -538,7 +558,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_central_heat_select")
+        self._read_failed("get_central_heat_select")
         return None
 
     async def get_fan_startup_delay(self) -> int:
@@ -552,7 +572,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_fan_startup_delay")
+        self._read_failed("get_fan_startup_delay")
         return None
 
     async def get_actual_vent_set(self) -> int:
@@ -566,7 +586,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_fan_startup_delay")
+        self._read_failed("get_fan_startup_delay")
         return None
 
     async def get_supply_fan_level(self) -> int:
@@ -580,7 +600,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_supply_fan_level")
+        self._read_failed("get_supply_fan_level")
         return None
 
     async def get_return_fan_level(self) -> int:
@@ -594,7 +614,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_return_fan_level")
+        self._read_failed("get_return_fan_level")
         return None
 
     async def get_return_fan_speed(self) -> int:
@@ -609,7 +629,7 @@ class Device:
                 signed=False,
             )
             return value / 100
-        _LOGGER.error("Could not read get_return_fan_speed")
+        self._read_failed("get_return_fan_speed")
         return None
 
     async def get_supply_fan_speed(self) -> int:
@@ -624,7 +644,7 @@ class Device:
                 signed=False,
             )
             return value / 100
-        _LOGGER.error("Could not read get_supply_fan_speed")
+        self._read_failed("get_supply_fan_speed")
         return None
 
     async def get_co2_low_limit_setpoint(self) -> int:
@@ -641,7 +661,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_co2_low_limit_setpoint")
+        self._read_failed("get_co2_low_limit_setpoint")
         return None
 
     async def get_co2_high_limit_setpoint(self) -> int:
@@ -658,7 +678,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_co2_high_limit_setpoint")
+        self._read_failed("get_co2_high_limit_setpoint")
         return None
 
     async def get_room_master_temperature(self) -> float:
@@ -673,7 +693,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_room_master_temperature")
+        self._read_failed("get_room_master_temperature")
         return None
 
     async def get_central_heating_setpoint(self) -> float:
@@ -688,7 +708,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_central_heating_setpoint")
+        self._read_failed("get_central_heating_setpoint")
         return None
 
     async def get_exchanger_efficiency(self) -> float:
@@ -703,7 +723,7 @@ class Device:
                 signed=False,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_exchanger_efficiency")
+        self._read_failed("get_exchanger_efficiency")
         return None
 
     async def get_hps_compressor_capacity(self) -> float:
@@ -718,7 +738,7 @@ class Device:
                 signed=False,
             )
             return float(value) / 10
-        _LOGGER.error("Could not read get_hps_compressor_capacity")
+        self._read_failed("get_hps_compressor_capacity")
         return None
 
     async def get_control_temperature(self) -> float:
@@ -733,7 +753,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_control_temperature")
+        self._read_failed("get_control_temperature")
         return None
 
     async def get_after_heating_element_capacity(self) -> float:
@@ -751,7 +771,7 @@ class Device:
                 signed=False,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_after_heating_element_capacity")
+        self._read_failed("get_after_heating_element_capacity")
         return None
 
     async def get_external_heating_offset(self) -> float:
@@ -769,7 +789,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_external_heating_offset")
+        self._read_failed("get_external_heating_offset")
         return None
 
     async def get_t0_controller_temperature(self) -> float:
@@ -787,7 +807,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t0_controller_temperature")
+        self._read_failed("get_t0_controller_temperature")
         return None
 
     async def get_t1_intake_temperature(self) -> float:
@@ -805,7 +825,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t1_intake_temperature")
+        self._read_failed("get_t1_intake_temperature")
         return None
 
     async def get_t2_inlet_temperature(self) -> float:
@@ -823,7 +843,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t2_inlet_temperature")
+        self._read_failed("get_t2_inlet_temperature")
         return None
 
     async def get_t3_exhaust_temperature(self) -> float:
@@ -841,7 +861,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t3_exhaust_temperature")
+        self._read_failed("get_t3_exhaust_temperature")
         return None
 
     async def get_t4_outlet(self) -> float:
@@ -859,7 +879,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t4_outlet")
+        self._read_failed("get_t4_outlet")
         return None
 
     async def get_t5_condenser_temperature(self) -> float:
@@ -874,7 +894,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t5_condenser_temperature")
+        self._read_failed("get_t5_condenser_temperature")
         return None
 
     async def get_t6_evaporator_temperature(self) -> float:
@@ -889,7 +909,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t6_evaporator_temperature")
+        self._read_failed("get_t6_evaporator_temperature")
         return None
 
     async def get_t7_inlet_temperature_after_heater(self) -> float:
@@ -904,7 +924,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t7_inlet_temperature_after_heater")
+        self._read_failed("get_t7_inlet_temperature_after_heater")
         return None
 
     async def get_t8_outdoor_temperature(self) -> float:
@@ -919,7 +939,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t8_outdoor_temperature")
+        self._read_failed("get_t8_outdoor_temperature")
         return None
 
     async def get_t9_heater_temperature(self) -> float:
@@ -934,7 +954,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t9_heater_temperature")
+        self._read_failed("get_t9_heater_temperature")
         return None
 
     async def get_t10_external_temperature(self) -> float:
@@ -952,7 +972,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t10_external_temperature")
+        self._read_failed("get_t10_external_temperature")
         return None
 
     async def get_t11_electric_water_heater_temperature(self) -> float:
@@ -970,7 +990,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t11_electric_water_heater_temperature")
+        self._read_failed("get_t11_electric_water_heater_temperature")
         return None
 
     async def get_t12_compressor_water_heater_temperature(self) -> float:
@@ -988,7 +1008,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t12_compressor_water_heater_temperature")
+        self._read_failed("get_t12_compressor_water_heater_temperature")
         return None
 
     async def get_t13_return_temperature(self) -> float:
@@ -1006,7 +1026,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t13_return_temperature")
+        self._read_failed("get_t13_return_temperature")
         return None
 
     async def get_t14_supply_temperature(self) -> float:
@@ -1024,7 +1044,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t14_supply_temperature")
+        self._read_failed("get_t14_supply_temperature")
         return None
 
     async def get_t15_user_panel_temperature(self) -> float:
@@ -1039,7 +1059,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t15_user_panel_temperature")
+        self._read_failed("get_t15_user_panel_temperature")
         return None
 
     async def get_t16_sacrificial_anode_temperature(self) -> float:
@@ -1054,7 +1074,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t16_sacrificial_anode_temperature")
+        self._read_failed("get_t16_sacrificial_anode_temperature")
         return None
 
     async def get_t17_preheater_temperature(self) -> float:
@@ -1069,7 +1089,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_t17_preheater_temperature")
+        self._read_failed("get_t17_preheater_temperature")
         return None
 
     async def get_hps_t16_return_temperature(self) -> float:
@@ -1084,7 +1104,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 10
-        _LOGGER.error("Could not read get_hps_t16_return_temperature")
+        self._read_failed("get_hps_t16_return_temperature")
         return None
 
     async def get_hps_t17_supply_temperature(self) -> float:
@@ -1099,7 +1119,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 10
-        _LOGGER.error("Could not read get_hps_t17_supply_temperature")
+        self._read_failed("get_hps_t17_supply_temperature")
         return None
 
     async def get_hps_t18_tank_temperature(self) -> float:
@@ -1114,7 +1134,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 10
-        _LOGGER.error("Could not read get_hps_t18_tank_temperature")
+        self._read_failed("get_hps_t18_tank_temperature")
         return None
 
     async def get_hps_t20_ambient_temperature(self) -> float:
@@ -1129,7 +1149,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 10
-        _LOGGER.error("Could not read get_hps_t20_ambient_temperature")
+        self._read_failed("get_hps_t20_ambient_temperature")
         return None
 
     async def get_hps_t21_shw_top_temperature(self) -> float:
@@ -1144,7 +1164,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 10
-        _LOGGER.error("Could not read get_hps_t21_shw_top_temperature")
+        self._read_failed("get_hps_t21_shw_top_temperature")
         return None
 
     async def get_hps_t22_shw_bottom_temperature(self) -> float:
@@ -1159,7 +1179,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 10
-        _LOGGER.error("Could not read get_hps_t22_shw_bottom_temperature")
+        self._read_failed("get_hps_t22_shw_bottom_temperature")
         return None
 
     async def get_hps_t35_pressure_pipe_temperature(self) -> float:
@@ -1174,7 +1194,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 10
-        _LOGGER.error("Could not read get_hps_t35_pressure_pipe_temperature")
+        self._read_failed("get_hps_t35_pressure_pipe_temperature")
         return None
 
     async def get_hps_hot_water_setpoint_actual(self) -> float:
@@ -1189,7 +1209,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 10
-        _LOGGER.error("Could not read get_hps_hot_water_setpoint_actual")
+        self._read_failed("get_hps_hot_water_setpoint_actual")
         return None
 
     async def get_hps_heating_setpoint_actual(self) -> float:
@@ -1204,7 +1224,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 10
-        _LOGGER.error("Could not read get_hps_heating_setpoint_actual")
+        self._read_failed("get_hps_heating_setpoint_actual")
         return None
 
     async def get_hps_output_compvolt1(self) -> float:
@@ -1219,7 +1239,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 10
-        _LOGGER.error("Could not read get_hps_output_compvolt1")
+        self._read_failed("get_hps_output_compvolt1")
         return None
 
     async def get_co2_sensor_value(self) -> float:
@@ -1234,7 +1254,7 @@ class Device:
                 signed=True,
             )
             return float(value)
-        _LOGGER.error("Could not read get_co2_sensor_value")
+        self._read_failed("get_co2_sensor_value")
         return None
 
     async def get_average_humidity(self) -> float:
@@ -1249,7 +1269,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_average_humidity")
+        self._read_failed("get_average_humidity")
         return None
 
     async def get_user_temperature_setpoint(self) -> float:
@@ -1267,7 +1287,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_user_temperature_setpoint")
+        self._read_failed("get_user_temperature_setpoint")
         return None
 
     async def get_defrost_start_setpoint(self) -> float:
@@ -1285,7 +1305,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_defrost_start_setpoint")
+        self._read_failed("get_defrost_start_setpoint")
         return None
 
     async def get_defrost_stop_setpoint(self) -> float:
@@ -1303,7 +1323,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_defrost_stop_setpoint")
+        self._read_failed("get_defrost_stop_setpoint")
         return None
 
     async def get_low_room_temperature_setpoint(self) -> float:
@@ -1321,7 +1341,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_low_room_temperature_setpoint")
+        self._read_failed("get_low_room_temperature_setpoint")
         return None
 
     async def get_low_temperature_curve(self) -> float:
@@ -1339,7 +1359,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_low_temperature_curve")
+        self._read_failed("get_low_temperature_curve")
         return None
 
     async def get_high_temperature_curve(self) -> float:
@@ -1357,7 +1377,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_high_temperature_curve")
+        self._read_failed("get_high_temperature_curve")
         return None
 
     async def get_low_temperature_compressor_start_setpoint(self) -> float:
@@ -1375,7 +1395,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_low_temperature_compressor_start_setpoint")
+        self._read_failed("get_low_temperature_compressor_start_setpoint")
         return None
 
     async def get_low_outdoor_temperature_setpoint(self) -> float:
@@ -1393,7 +1413,7 @@ class Device:
                 signed=True,
             )
             return float(value)
-        _LOGGER.error("Could not read get_low_outdoor_temperature_setpoint")
+        self._read_failed("get_low_outdoor_temperature_setpoint")
         return None
 
     async def get_scalding_protection_setpoint(self) -> float:
@@ -1411,7 +1431,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_scalding_protection_setpoint")
+        self._read_failed("get_scalding_protection_setpoint")
         return None
 
     async def get_user_humidity_setpoint(self) -> float:
@@ -1446,7 +1466,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_electric_water_heater_setpoint")
+        self._read_failed("get_electric_water_heater_setpoint")
         return None
 
     async def get_compressor_water_heater_setpoint(self) -> float:
@@ -1464,7 +1484,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_compressor_water_heater_setpoint")
+        self._read_failed("get_compressor_water_heater_setpoint")
         return None
 
     async def get_hps_water_heater_setpoint(self) -> float:
@@ -1482,7 +1502,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 10
-        _LOGGER.error("Could not read get_hps_water_heater_setpoint")
+        self._read_failed("get_hps_water_heater_setpoint")
         return None
 
     async def get_hps_heating_setpoint_min(self) -> float:
@@ -1500,7 +1520,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 10
-        _LOGGER.error("Could not read get_hps_heating_setpoint_min")
+        self._read_failed("get_hps_heating_setpoint_min")
         return None
 
     async def get_ch_min_supply_temperature(self) -> float:
@@ -1518,7 +1538,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_ch_min_supply_temperature")
+        self._read_failed("get_ch_min_supply_temperature")
         return None
 
     async def get_ch_max_supply_temperature(self) -> float:
@@ -1536,7 +1556,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_ch_max_supply_temperature")
+        self._read_failed("get_ch_max_supply_temperature")
         return None
 
     async def get_min_supply_air_summer_setpoint(self) -> float:
@@ -1554,7 +1574,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_min_supply_air_summer_setpoint")
+        self._read_failed("get_min_supply_air_summer_setpoint")
         return None
 
     async def get_min_supply_air_winter_setpoint(self) -> float:
@@ -1572,7 +1592,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_min_supply_air_winter_setpoint")
+        self._read_failed("get_min_supply_air_winter_setpoint")
         return None
 
     async def get_max_supply_air_summer_setpoint(self) -> float:
@@ -1590,7 +1610,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_max_supply_air_summer_setpoint")
+        self._read_failed("get_max_supply_air_summer_setpoint")
         return None
 
     async def get_max_supply_air_winter_setpoint(self) -> float:
@@ -1608,7 +1628,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_max_supply_air_winter_setpoint")
+        self._read_failed("get_max_supply_air_winter_setpoint")
         return None
 
     async def get_summer_state_change_setpoint(self) -> float:
@@ -1626,7 +1646,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_summer_state_change_setpoint")
+        self._read_failed("get_summer_state_change_setpoint")
         return None
 
     async def get_operation_mode(self) -> int:
@@ -1640,7 +1660,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_operation_mode")
+        self._read_failed("get_operation_mode")
         return None
 
     async def get_pre_heater_defrost_select(self) -> int:
@@ -1654,7 +1674,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_pre_heater_defrost_select")
+        self._read_failed("get_pre_heater_defrost_select")
         return None
 
     async def get_pre_heater_temp_set(self) -> int:
@@ -1668,7 +1688,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_pre_heater_temp_set")
+        self._read_failed("get_pre_heater_temp_set")
         return None
 
     async def get_high_humidity_step(self) -> int:
@@ -1685,7 +1705,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_high_humidity_step")
+        self._read_failed("get_high_humidity_step")
         return None
 
     async def get_max_high_humidity_vent_time(self) -> int:
@@ -1702,7 +1722,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_max_high_humidity_vent_time")
+        self._read_failed("get_max_high_humidity_vent_time")
         return None
 
     async def get_user_function_1_time(self) -> int:
@@ -1719,7 +1739,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_user_function_1_time")
+        self._read_failed("get_user_function_1_time")
         return None
 
     async def get_user_function_2_time(self) -> int:
@@ -1736,7 +1756,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_user_function_2_time")
+        self._read_failed("get_user_function_2_time")
         return None
 
     async def get_user_function_1_temperature(self) -> int:
@@ -1753,7 +1773,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_user_function_1_temperature")
+        self._read_failed("get_user_function_1_temperature")
         return None
 
     async def get_user_function_2_temperature(self) -> int:
@@ -1770,7 +1790,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_user_function_2_temperature")
+        self._read_failed("get_user_function_2_temperature")
         return None
 
     async def get_user_function_1_offset(self) -> int:
@@ -1787,7 +1807,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_user_function_1_offset")
+        self._read_failed("get_user_function_1_offset")
         return None
 
     async def get_user_function_2_offset(self) -> int:
@@ -1804,7 +1824,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_user_function_2_offset")
+        self._read_failed("get_user_function_2_offset")
         return None
 
     async def get_supply_heating_pid_time(self) -> int:
@@ -1821,7 +1841,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_supply_heating_pid_time")
+        self._read_failed("get_supply_heating_pid_time")
         return None
 
     async def get_minimum_defrost_time(self) -> int:
@@ -1838,7 +1858,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_minimum_defrost_time")
+        self._read_failed("get_minimum_defrost_time")
         return None
 
     async def get_maximum_outlet_defrost_time(self) -> int:
@@ -1855,7 +1875,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_maximum_outlet_defrost_time")
+        self._read_failed("get_maximum_outlet_defrost_time")
         return None
 
     async def get_maximum_compressor_defrost_time(self) -> int:
@@ -1872,7 +1892,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_maximum_compressor_defrost_time")
+        self._read_failed("get_maximum_compressor_defrost_time")
         return None
 
     async def get_time_between_defrost(self) -> int:
@@ -1889,7 +1909,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_time_between_defrost")
+        self._read_failed("get_time_between_defrost")
         return None
 
     async def get_compressor_stop_time(self) -> int:
@@ -1906,7 +1926,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_compressor_stop_time")
+        self._read_failed("get_compressor_stop_time")
         return None
 
     async def get_hmi_language(self) -> int:
@@ -1923,7 +1943,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_hmi_language")
+        self._read_failed("get_hmi_language")
         return None
 
     async def get_circulation_pump_mode(self) -> int:
@@ -1940,7 +1960,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_circulation_pump_mode")
+        self._read_failed("get_circulation_pump_mode")
         return None
 
     async def get_low_humidity_step(self) -> int:
@@ -1957,7 +1977,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_low_humidity_step")
+        self._read_failed("get_low_humidity_step")
         return None
 
     async def get_air_quality_control_type(self) -> int:
@@ -1971,7 +1991,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_air_quality_control_type")
+        self._read_failed("get_air_quality_control_type")
         return None
 
     async def get_cooling_setpoint(self) -> int:
@@ -1988,7 +2008,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_cooling_setpoint")
+        self._read_failed("get_cooling_setpoint")
         return None
 
     async def get_cooling_mode_ventilation_step(self) -> int:
@@ -2002,7 +2022,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_cooling_mode_ventilation_step")
+        self._read_failed("get_cooling_mode_ventilation_step")
         return None
 
     async def get_co2_ventilation_high_step(self) -> int:
@@ -2019,7 +2039,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_co2_ventilation_high_step")
+        self._read_failed("get_co2_ventilation_high_step")
         return None
 
     async def get_alarm_count(self) -> int:
@@ -2034,7 +2054,7 @@ class Device:
                 signed=False,
             )
             return value & 0x03
-        _LOGGER.error("Could not read get_alarm_count")
+        self._read_failed("get_alarm_count")
         return None
 
     async def get_hps_alarm_count(self) -> int:
@@ -2048,7 +2068,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_hps_alarm_count")
+        self._read_failed("get_hps_alarm_count")
         return None
 
     async def get_legionella_day(self) -> int:
@@ -2062,7 +2082,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_legionella_day")
+        self._read_failed("get_legionella_day")
         return None
 
     async def get_hps_season_mode(self) -> int:
@@ -2076,7 +2096,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_hps_season_mode")
+        self._read_failed("get_hps_season_mode")
         return None
 
     async def get_air_filter_alarm_interval(self) -> int:
@@ -2093,7 +2113,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_air_filter_alarm_interval")
+        self._read_failed("get_air_filter_alarm_interval")
         return None
 
     async def get_time_in_control_state(self) -> datetime:
@@ -2111,7 +2131,7 @@ class Device:
                 signed=False,
             )
             return datetime.timedelta(seconds=value)
-        _LOGGER.error("Could not read get_time_in_control_state")
+        self._read_failed("get_time_in_control_state")
         return None
 
     async def get_days_since_air_filter_change(self) -> int:
@@ -2128,7 +2148,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_days_since_air_filter_change")
+        self._read_failed("get_days_since_air_filter_change")
         return None
 
     async def get_days_to_air_filter_change(self) -> int:
@@ -2145,7 +2165,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_days_to_air_filter_change")
+        self._read_failed("get_days_to_air_filter_change")
         return None
 
     async def get_air_exchange_mode(self) -> int:
@@ -2159,7 +2179,7 @@ class Device:
                 "little",
                 signed=True,
             )
-        _LOGGER.error("Could not read get_air_exchange_mode")
+        self._read_failed("get_air_exchange_mode")
         return None
 
     async def get_summer_state(self) -> int:
@@ -2173,7 +2193,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_summer_state")
+        self._read_failed("get_summer_state")
         return None
 
     async def get_ventilation_step(self) -> int:
@@ -2187,7 +2207,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_ventilation_step")
+        self._read_failed("get_ventilation_step")
         return None
 
     async def get_min_supply_step(self) -> int:
@@ -2201,7 +2221,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_min_supply_step")
+        self._read_failed("get_min_supply_step")
         return None
 
     async def get_min_return_step(self) -> int:
@@ -2215,7 +2235,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_min_return_step")
+        self._read_failed("get_min_return_step")
         return None
 
     async def get_max_return_step(self) -> int:
@@ -2229,7 +2249,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_max_return_step")
+        self._read_failed("get_max_return_step")
         return None
 
     async def get_low_outdoor_temperature_ventilation_step(self) -> int:
@@ -2246,7 +2266,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_low_outdoor_temperature_ventilation_step")
+        self._read_failed("get_low_outdoor_temperature_ventilation_step")
         return None
 
     async def get_electric_water_heater_state(self) -> bool:
@@ -2263,7 +2283,7 @@ class Device:
             if value:
                 return True
             return False
-        _LOGGER.error("Could not read get_electric_water_heater_state")
+        self._read_failed("get_electric_water_heater_state")
         return None
 
     async def get_circulation_pump_state(self) -> bool:
@@ -2280,7 +2300,7 @@ class Device:
             if value:
                 return True
             return False
-        _LOGGER.error("Could not read get_circulation_pump_state")
+        self._read_failed("get_circulation_pump_state")
         return None
 
     async def get_heater_relay_1_state(self) -> bool:
@@ -2297,7 +2317,7 @@ class Device:
             if value:
                 return True
             return False
-        _LOGGER.error("Could not read get_heater_relay_1_state")
+        self._read_failed("get_heater_relay_1_state")
         return None
 
     async def get_heater_relay_2_state(self) -> bool:
@@ -2314,7 +2334,7 @@ class Device:
             if value:
                 return True
             return False
-        _LOGGER.error("Could not read get_heater_relay_2_state")
+        self._read_failed("get_heater_relay_2_state")
         return None
 
     async def get_heater_relay_3_state(self) -> bool:
@@ -2331,7 +2351,7 @@ class Device:
             if value:
                 return True
             return False
-        _LOGGER.error("Could not read get_heater_relay_3_state")
+        self._read_failed("get_heater_relay_3_state")
         return None
 
     async def get_compressor_priority(self) -> int:
@@ -2345,7 +2365,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_compressor_priority")
+        self._read_failed("get_compressor_priority")
         return None
 
     async def get_central_heat_supply_curve(self) -> int:
@@ -2362,7 +2382,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_central_heat_supply_curve")
+        self._read_failed("get_central_heat_supply_curve")
         return None
 
     async def get_supply_heater_delay(self) -> int:
@@ -2376,7 +2396,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_supply_heater_delay")
+        self._read_failed("get_supply_heater_delay")
         return None
 
     async def get_ventilation_state(self) -> int:
@@ -2390,7 +2410,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_ventilation_state")
+        self._read_failed("get_ventilation_state")
         return None
 
     async def get_control_state(self) -> int:
@@ -2404,7 +2424,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_control_state")
+        self._read_failed("get_control_state")
         return None
 
     async def get_hps_heat_pump_state(self) -> int:
@@ -2418,7 +2438,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_hps_heat_pump_state")
+        self._read_failed("get_hps_heat_pump_state")
         return None
 
     async def get_humidity(self) -> float:
@@ -2433,7 +2453,7 @@ class Device:
                 signed=False,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_humidity")
+        self._read_failed("get_humidity")
         return None
 
     async def get_central_heat_supply_curve_offset(self) -> float:
@@ -2451,7 +2471,7 @@ class Device:
                 signed=True,
             )
             return float(value) / 100
-        _LOGGER.error("Could not read get_central_heat_supply_curve_offset")
+        self._read_failed("get_central_heat_supply_curve_offset")
         return None
 
     async def get_run_state(self) -> bool:
@@ -2468,7 +2488,7 @@ class Device:
             if value == 0:
                 return False
             return True
-        _LOGGER.error("Could not read get_run_state")
+        self._read_failed("get_run_state")
         return None
 
     async def get_hps_main_switch(self) -> bool:
@@ -2485,7 +2505,7 @@ class Device:
             if value == 0:
                 return False
             return True
-        _LOGGER.error("Could not read get_hps_main_switch")
+        self._read_failed("get_hps_main_switch")
         return None
 
     async def get_alarm_1_code(self) -> int:
@@ -2500,7 +2520,7 @@ class Device:
                 signed=False,
             )
             return value & 0x7F
-        _LOGGER.error("Could not read get_alarm_1_code")
+        self._read_failed("get_alarm_1_code")
         return None
 
     async def get_alarm_2_code(self) -> int:
@@ -2515,7 +2535,7 @@ class Device:
                 signed=False,
             )
             return value & 0x7F
-        _LOGGER.error("Could not read get_alarm_2_code")
+        self._read_failed("get_alarm_2_code")
         return None
 
     async def get_alarm_3_code(self) -> int:
@@ -2530,7 +2550,7 @@ class Device:
                 signed=False,
             )
             return value & 0x7F
-        _LOGGER.error("Could not read get_alarm_3_code")
+        self._read_failed("get_alarm_3_code")
         return None
 
     async def get_hps_alarm_1_code(self) -> int:
@@ -2544,7 +2564,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_hps_alarm_1_code")
+        self._read_failed("get_hps_alarm_1_code")
         return None
 
     async def get_hps_alarm_2_code(self) -> int:
@@ -2558,7 +2578,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_hps_alarm_2_code")
+        self._read_failed("get_hps_alarm_2_code")
         return None
 
     async def get_hps_alarm_3_code(self) -> int:
@@ -2572,7 +2592,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_hps_alarm_3_code")
+        self._read_failed("get_hps_alarm_3_code")
         return None
 
     async def get_high_pressure_switch_state(self) -> bool:
@@ -2589,7 +2609,7 @@ class Device:
             if value == 0:
                 return False
             return True
-        _LOGGER.error("Could not read get_high_pressure_switch_state")
+        self._read_failed("get_high_pressure_switch_state")
         return None
 
     async def get_low_pressure_switch_state(self) -> bool:
@@ -2606,7 +2626,7 @@ class Device:
             if value == 0:
                 return False
             return True
-        _LOGGER.error("Could not read get_low_pressure_switch_state")
+        self._read_failed("get_low_pressure_switch_state")
         return None
 
     async def get_smoke_alarm_state(self) -> bool:
@@ -2623,7 +2643,7 @@ class Device:
             if value == 0:
                 return False
             return True
-        _LOGGER.error("Could not read get_smoke_alarm_state")
+        self._read_failed("get_smoke_alarm_state")
         return None
 
     async def get_user_function_1_state(self) -> bool:
@@ -2640,7 +2660,7 @@ class Device:
             if value == 0:
                 return False
             return True
-        _LOGGER.error("Could not read get_user_function_1_state")
+        self._read_failed("get_user_function_1_state")
         return None
 
     async def get_user_function_2_state(self) -> bool:
@@ -2657,7 +2677,7 @@ class Device:
             if value == 0:
                 return False
             return True
-        _LOGGER.error("Could not read get_user_function_2_state")
+        self._read_failed("get_user_function_2_state")
         return None
 
     async def get_display_led_1_state(self) -> bool:
@@ -2674,7 +2694,7 @@ class Device:
             if value == 0:
                 return False
             return True
-        _LOGGER.error("Could not read get_display_led_1_state")
+        self._read_failed("get_display_led_1_state")
         return None
 
     async def get_display_led_2_state(self) -> bool:
@@ -2691,7 +2711,7 @@ class Device:
             if value == 0:
                 return False
             return True
-        _LOGGER.error("Could not read get_display_led_2_state")
+        self._read_failed("get_display_led_2_state")
         return None
 
     async def get_compressor_state(self) -> bool:
@@ -2708,7 +2728,7 @@ class Device:
             if value == 0:
                 return False
             return True
-        _LOGGER.error("Could not read get_compressor_state")
+        self._read_failed("get_compressor_state")
         return None
 
     async def get_co2_present(self) -> bool:
@@ -2725,7 +2745,7 @@ class Device:
             if value == 0:
                 return False
             return True
-        _LOGGER.error("Could not read get_co2_present")
+        self._read_failed("get_co2_present")
         return None
 
     async def get_defrost_state(self) -> bool:
@@ -2742,7 +2762,7 @@ class Device:
             if value == 0:
                 return False
             return True
-        _LOGGER.error("Could not read get_defrost_state")
+        self._read_failed("get_defrost_state")
         return None
 
     async def get_bypass_flap_state(self) -> bool:
@@ -2759,7 +2779,7 @@ class Device:
             if value == 0:
                 return False
             return True
-        _LOGGER.error("Could not read get_bypass_flap_state")
+        self._read_failed("get_bypass_flap_state")
         return None
 
     async def get_user_function_1_mode(self) -> int:
@@ -2773,7 +2793,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_user_function_1_mode")
+        self._read_failed("get_user_function_1_mode")
         return None
 
     async def get_user_function_2_mode(self) -> int:
@@ -2787,7 +2807,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_user_function_2_mode")
+        self._read_failed("get_user_function_2_mode")
         return None
 
     async def get_user_function_1_ventilation_step(self) -> int:
@@ -2801,7 +2821,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_user_function_1_ventilation_step")
+        self._read_failed("get_user_function_1_ventilation_step")
         return None
 
     async def get_user_function_2_ventilation_step(self) -> int:
@@ -2815,7 +2835,7 @@ class Device:
                 "little",
                 signed=False,
             )
-        _LOGGER.error("Could not read get_user_function_2_ventilation_step")
+        self._read_failed("get_user_function_2_ventilation_step")
         return None
 
     async def get_time(self) -> datetime:
@@ -2842,7 +2862,7 @@ class Device:
                 times[0],
             )
 
-        _LOGGER.error("Could not read get_time")
+        self._read_failed("get_time")
         return None
 
     async def set_time(self, time: datetime.datetime) -> bool:
