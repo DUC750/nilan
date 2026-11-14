@@ -16,6 +16,7 @@
 > | `translations/de.json`, `en.json` | Names for the pressure switches; German name for **T5 corrected to condenser** (it is the component, not condensate) |
 > | `rtu_hub.py`, `device.py`, `config_flow.py` | Third connection type **serial port selected in Home Assistant** (Modbus RTU over serialx), e.g. an ESPHome serial proxy such as the Home Assistant Connect AUX-2 — see [below](#serial-port-selected-in-home-assistant) |
 > | `config_flow.py` | **Reconfigure** an existing entry between TCP and serial port without losing entities |
+> | `link_health.py`, `rtu_hub.py`, `__init__.py`, `device.py` | **Link recovery** for both transports: entities go unavailable when the device stops answering, the serial port reopens itself, the entry reloads after 5 min of silence — see [below](#when-the-link-drops) |
 >
 > **Please report problems with this fork here, not in `veista/nilan`.** If you can reproduce the
 > problem with the upstream integration, report it there instead — that keeps unrelated reports
@@ -84,6 +85,22 @@ Tested on a VP 18comp (CTS602) with Home Assistant Connect AUX-2 (custom ESPHome
 Waveshare USB TO RS485 adapter (FT232RL), about 30 cm of cable, first try without swapping A/B.
 The AUX-2 factory firmware only binds CH343-based USB adapters; an FT232 adapter needs an ESPHome
 configuration that extends the `usb_uart` entry with `type: FT232`, `vid: 0x0403`, `pid: 0x6001`.
+
+#### When the link drops
+
+Applies to both connection types (gateway power cut, ESPHome device restart, cable pulled):
+
+| After | What happens |
+| --- | --- |
+| first failed reads | `Could not read …` errors as before; a single failing register stays visible |
+| 5 failures in a row | further read errors are logged at debug level only |
+| 90 s without an answer | all Nilan entities become **unavailable**, one warning in the log |
+| 5 s, then 10, 20, 40, 60 s | serial port only: the port is reopened (a dead serialx stream cannot recover by itself) |
+| 5 min without an answer | the integration reloads its entry; while the device stays silent, Home Assistant keeps retrying setup |
+| first answer | entities available again, one warning with the outage duration |
+
+Before this, a dropped serial proxy left an exception on the stream that every entity update
+re-raised; its traceback grew with every poll until Home Assistant stopped responding.
 
 ### Software
 #### Manually
