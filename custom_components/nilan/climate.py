@@ -125,6 +125,11 @@ class NilanClimate(NilanEntity, ClimateEntity):
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_supported_features = supported_featrures
         self._extra_status_attributes = extra_status_attributes
+        # async_update returns early when control_state cannot be read. Without these
+        # defaults the first state write raises AttributeError and Home Assistant drops
+        # the entity until the next reload (seen after a restart, #2370).
+        self._attr_hvac_mode = None
+        self._attr_hvac_action = None
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
